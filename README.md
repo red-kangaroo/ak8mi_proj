@@ -1,7 +1,6 @@
 <div align="center">
 
-# Matematická informatika
-## Optimalizační algoritmy
+# Optimalizační algoritmy
 </div>
 
 Přehled výsledků vyhledávání minim jde najít v souboru `statistics_output.xlsx`,
@@ -22,5 +21,19 @@ py -m pip install -r requirements.txt
 py optim.py
 ```
 
-Výstup skiptu se nalézá v souboru `raw_output.xlsx`, a zároveň skript vykreslí
+Výstup skiptu se uloží do souboru `raw_output.xlsx`, a zároveň skript vykreslí
 grafy pro jednotlivé vstupy.
+
+### Hill climber
+
+Pro funkci Schwefel váznul hill climber opakovaně v lokálních minimech,
+rozhodl jsem se ho tedy spustit opakovaně v jedné iteraci, celkem 5x
+(po 2000 voláních účelové funkce) a brát nejlepší výsledek. Toto opakované
+spuštění je dobře patrné i na grafech, kde dochází ke zlomům a skoku na 
+lepší výsledek.
+
+Taktéž jsem zkoušel alternativní metodu určování okolí, v grafech se jedná
+o grafy se sufixem `_alt`, a to použití 10% okolí od aktuálního bodu, ne 
+10% z celého rozsahu. Tím se postupným snižováním hodnoty bodu při hledání
+minima snižovala i velikost okolí. Především pro funkci Schwefel to vedlo
+k celkem výraznému zlepšení dosahovaných výsledků.
