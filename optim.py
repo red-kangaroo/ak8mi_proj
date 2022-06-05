@@ -30,6 +30,7 @@ ITERATIONS = 30
 # Hill climber:
 H_COUNT = 10  # Number of neighbours
 H_NEAR = 0.1  # Max difference of neighbourhood
+H_RES = 1000  # Stop and run again after that many energy function calls.
 
 # Logging root handler:
 logger = log.getLogger()
@@ -133,15 +134,18 @@ def hill_climber(it: int, fn, dim: int, constr_min: float, constr_max: float):
         nears = list()
         results = list()
         result = None
+        size = abs(constr_min) + abs(constr_max)
 
         for c in range(H_COUNT):
             nears.append(list())
             for inp in ins:
-                # Sadly, Python does not have a do-while loop. I miss it in places like this.
-                new_inp = random.uniform(inp * (1 - H_NEAR), inp * (1 + H_NEAR))
-                while new_inp > constr_max or new_inp < constr_min:
-                    new_inp = random.uniform(inp * (1 - H_NEAR), inp * (1 + H_NEAR))
+                new_inp = random.uniform(max(inp - (size * H_NEAR / 2), constr_min),
+                                         min(inp + (size * H_NEAR / 2), constr_max))
+                # new_inp = random.uniform(max(inp * (1 - H_NEAR), constr_min),
+                #                          min(inp * (1 + H_NEAR), constr_max))
 
+                # while new_inp > constr_max or new_inp < constr_min:
+                #     new_inp = random.uniform(inp * (1 - H_NEAR), inp * (1 + H_NEAR))
                 nears[c].append(new_inp)
 
             r = fn(nears[c])
@@ -169,7 +173,8 @@ def hill_climber(it: int, fn, dim: int, constr_min: float, constr_max: float):
             new_out, new_in = climb_step(result_in)
             uses -= 10
 
-            if new_out >= result_out:
+            if False:  # new_out >= result_out:
+                # Actually, that would've been local search...
                 logger.debug(f"Ending hill climbing for iteration {itr} with {uses} uses still to go.")
 
                 if res_out is None or result_out < res_out:
@@ -179,7 +184,9 @@ def hill_climber(it: int, fn, dim: int, constr_min: float, constr_max: float):
 
                 break
             else:
-                result_out, result_in = new_out, new_in
+                if new_out < result_out:
+                    result_out = new_out  # Note better result if we found one.
+                result_in = new_in  # Generate new neighbourhood from the best input, even if the result is not better.
 
                 if res_out is None or result_out < res_out:
                     graph_x.append(FES - uses)
@@ -187,6 +194,10 @@ def hill_climber(it: int, fn, dim: int, constr_min: float, constr_max: float):
                     RESULTS[dim]['hill_climber'][fn.__name__][i].append((FES - uses, result_out))
                 else:
                     RESULTS[dim]['hill_climber'][fn.__name__][i].append((FES - uses, res_out))
+
+            # Re-run several times for better results:
+            if uses % H_RES == 0:
+                break
 
         return result_out, result_in, uses
 
